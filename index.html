@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Jogo das Possibilidades</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto:wght@400;700&family=Dancing+Script:wght@700&display=swap');
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+            background-attachment: fixed;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        .game-container, .start-screen, .end-screen {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            overflow-y: auto;
+            max-height: 100vh;
+            box-sizing: border-box;
+        }
+        .start-screen, .end-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+        }
+        .doll-area {
+            width: 100%;
+            height: 50vh;
+            background: url('https://i.imgur.com/4eEbY3N.png') no-repeat center;
+            background-size: contain;
+            margin: 10px 0;
+            position: relative;
+        }
+        .clothing-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .clothing-item {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .clothing-item:hover {
+            transform: scale(1.1);
+        }
+        .button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 2px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            border-radius: 25px;
+        }
+        .button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        #reset {
+            background: #f44336;
+        }
+        #reset:hover {
+            background-color: #d32f2f;
+        }
+        .worn-item {
+            position: absolute;
+            transition: all 0.3s ease;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            width: 35%;
+            height: 35%;
+            cursor: move;
+            touch-action: none;
+        }
+        h1 {
+            font-family: 'Pacifico', cursive;
+            font-size: 2em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.5em;
+            margin: 15px auto;
+            max-width: 80%;
+            text-align: center;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .author {
+            position: fixed;
+            bottom: 5px;
+            right: 5px;
+            font-family: 'Pacifico', cursive;
+            font-size: 0.8em;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 480px) {
+            .doll-area {
+                height: 45vh;
+            }
+            .clothing-item {
+                width: 35px;
+                height: 35px;
+            }
+            .button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .subtitle {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="start-screen" id="start-screen">
+        <h1>Jogo das Possibilidades</h1>
+        <p class="subtitle">Qual o total de possibilidades de looks que podemos montar?</p>
+        <button id="start-game" class="button">Iniciar Jogo</button>
+    </div>
+    <div class="game-container hidden" id="game-container">
+        <h1>Jogo das Possibilidades</h1>
+        <p class="subtitle">Qual o total de possibilidades de looks que podemos montar?</p>
+        <div class="doll-area" id="doll"></div>
+        <div class="clothing-options" id="all-options"></div>
+        <div>
+            <p>Nível: <span id="level">1</span></p>
+            <button id="next-level" class="button">Próximo Nível</button>
+            <button id="reset" class="button">Reset</button>
+        </div>
+    </div>
+    <div class="end-screen hidden" id="end-screen">
+        <h1>Parabéns!</h1>
+        <p class="subtitle">Você completou todos os níveis do Jogo das Possibilidades!</p>
+        <p class="subtitle">Chame o professor para orientá-lo para a próxima atividade.</p>
+        <button id="restart-game" class="button">Voltar ao início</button>
+    </div>
+    <div class="author">Por Millena Faleiro</div>
+
+    <script>
+        const clothingItems = [
+            { type: 'top', src: 'https://imgur.com/cvJDdny.png' },
+            { type: 'top', src: 'https://imgur.com/VMvaskg.png' },
+            { type: 'top', src: 'https://imgur.com/Wg1jdLU.png' },
+            { type: 'bottom', src: 'https://imgur.com/Z34jLN7.png' },
+            { type: 'bottom', src: 'https://imgur.com/Mn31U1F.png' },
+            { type: 'shoes', src: 'https://imgur.com/PEMMTQc.png' },
+            { type: 'shoes', src: 'https://imgur.com/5SRsehl.png' },
+            { type: 'bag', src: 'https://imgur.com/39Cp5bH.png' },
+            { type: 'bag', src: 'https://imgur.com/LDl3eYG.png' },
+            { type: 'bag', src: 'https://imgur.com/GjwGU6i.png' },
+            { type: 'bag', src: 'https://imgur.com/0RlfgZH.png' },
+            { type: 'bag', src: 'https://imgur.com/y2dknhm.png' }
+        ];
+
+        let currentLevel = 1;
+        const startScreen = document.getElementById('start-screen');
+        const gameContainer = document.getElementById('game-container');
+        const endScreen = document.getElementById('end-screen');
+        const doll = document.getElementById('doll');
+        const allOptions = document.getElementById('all-options');
+        const nextLevelButton = document.getElementById('next-level');
+        const resetButton = document.getElementById('reset');
+        const levelDisplay = document.getElementById('level');
+        const startGameButton = document.getElementById('start-game');
+        const restartGameButton = document.getElementById('restart-game');
+
+        startGameButton.addEventListener('click', () => {
+            startScreen.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            loadLevel(currentLevel);
+        });
+
+        restartGameButton.addEventListener('click', () => {
+            endScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            currentLevel = 1;
+            levelDisplay.textContent = currentLevel;
+            resetDoll();
+        });
+
+        function createClothingItem(item) {
+            const div = document.createElement('div');
+            div.className = 'clothing-item';
+            div.style.backgroundImage = `url(${item.src})`;
+            div.dataset.type = item.type;
+            div.dataset.src = item.src;
+
+            div.addEventListener('click', () => {
+                addItemToDoll(item);
+            });
+
+            return div;
+        }
+
+        function addItemToDoll(item) {
+            const existingItem = doll.querySelector(`[data-type="${item.type}"]`);
+            if (existingItem) {
+                doll.removeChild(existingItem);
+            }
+
+            const newItem = document.createElement('div');
+            newItem.className = 'worn-item';
+            newItem.style.backgroundImage = `url(${item.src})`;
+            newItem.dataset.type = item.type;
+            newItem.dataset.src = item.src;
+            newItem.style.left = '30%';
+            
+            switch(item.type) {
+                case 'top':
+                    newItem.style.top = '20%';
+                    break;
+                case 'bottom':
+                    newItem.style.top = '50%';
+                    break;
+                case 'shoes':
+                    newItem.style.top = '80%';
+                    newItem.style.width = '25%';
+                    newItem.style.height = '25%';
+                    break;
+                case 'bag':
+                    newItem.style.top = '40%';
+                    newItem.style.left = '60%';
+                    newItem.style.width = '20%';
+                    newItem.style.height = '20%';
+                    break;
+            }
+            
+            makeDraggable(newItem);
+            newItem.addEventListener('dblclick', () => {
+                doll.removeChild(newItem);
+            });
+            doll.appendChild(newItem);
+        }
+
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            element.onmousedown = dragMouseDown;
+            element.ontouchstart = dragTouchStart;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function dragTouchStart(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+                document.ontouchend = closeDragElement;
+                document.ontouchmove = elementDragTouch;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function elementDragTouch(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.touches[0].clientX;
+                pos2 = pos4 - e.touches[0].clientY;
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                document.ontouchend = null;
+                document.ontouchmove = null;
+            }
+        }
+
+        function loadLevel(level) {
+            allOptions.innerHTML = '';
+            let itemsToShow;
+            if (level === 1) {
+                itemsToShow = clothingItems.slice(0, 5);
+            } else if (level === 2) {
+                itemsToShow = clothingItems.slice(0, 7);
+            } else {
+                itemsToShow = clothingItems;
+            }
+            itemsToShow.forEach(item => {
+                const newItem = createClothingItem(item);
+                allOptions.appendChild(newItem);
+            });
+        }
+
+        function resetDoll() {
+            doll.innerHTML = '';
+            loadLevel(currentLevel);
+        }
+
+        nextLevelButton.addEventListener('click', () => {
+            if (currentLevel < 3) {
+                currentLevel++;
+                levelDisplay.textContent = currentLevel;
+                loadLevel(currentLevel);
+            } else {
+                gameContainer.classList.add('hidden');
+                endScreen.classList.remove('hidden');
+            }
+        });
+
+        resetButton.addEventListener('click', resetDoll);
+
+        document.addEventListener('touchmove', function(e) {
+            if(!e.target.classList.contains('worn-item')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
